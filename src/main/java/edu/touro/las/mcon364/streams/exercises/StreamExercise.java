@@ -113,7 +113,7 @@ public class StreamExercise {
         List<Integer> totalList = List.of();
         return gradebook.values()
                 .stream()
-                .flatMap(list->list.stream())//flattens the list into 1 long list
+                .flatMap(Collection::stream)//flattens the list into 1 long list
                 .sorted().toList();
     }
     
@@ -125,7 +125,9 @@ public class StreamExercise {
     public int findHighestGrade() {
         // TODO: Implement using streams
         // Hint: Flatten first, then find max
-        return 0;
+
+        return  gradebook.values()
+                .stream().flatMap(list->list.stream()).mapToInt(i->i).max().orElse(0);
     }
     
     /**
@@ -135,7 +137,8 @@ public class StreamExercise {
      */
     public int findLowestGrade() {
         // TODO: Implement using streams
-        return 0;
+
+        return gradebook.values().stream().flatMap(list->list.stream()).mapToInt(i->i).min().orElse(0);
     }
     
     /**
