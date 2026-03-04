@@ -4,6 +4,8 @@ import java.time.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static java.util.Comparator.comparingDouble;
+
 /**
  * Homework: E-Commerce Order Analytics
  * 
@@ -246,7 +248,7 @@ public class StreamHomework {
     public List<String> getTopCustomers(int n) {
         // TODO: Implement using streams
         // Hint: Use getRevenueByCustomer(), sort by value descending, limit
-        return getRevenueByCustomer().entrySet().stream().sorted(Comparator.comparingDouble(Map.Entry::getValue)).limit(n).map(Map.Entry::getKey).toList();
+        return getRevenueByCustomer().entrySet().stream().sorted(Comparator.<Map.Entry<String, Double>>comparingDouble(Map.Entry::getValue).reversed()).limit(n).map(Map.Entry::getKey).toList();
 
     }
     
@@ -287,7 +289,11 @@ public class StreamHomework {
     public Map<String, Double> getRevenueByCategory() {
         // TODO: Implement using streams
         // Hint: Filter delivered, flatMap to items, group by category
-        return null;
+        return customerOrders.stream()
+                .filter(customerOrder -> customerOrder.status()==OrderStatus.DELIVERED)
+                .flatMap(order->order.items().stream())
+                .collect(Collectors.groupingBy(orderItem -> orderItem.product().category(),
+                        Collectors.summingDouble(OrderItem::getLineTotal)));
     }
     
     /**
@@ -298,7 +304,12 @@ public class StreamHomework {
     public List<Product> getTopSellingProducts(int n) {
         // TODO: Implement using streams
         // Hint: flatMap to items, group by product, sum quantities, sort
-        return null;
+        return customerOrders.stream()
+                .flatMap(order->order.items().stream())
+                .collect(Collectors.groupingBy(OrderItem::product, Collectors.summingDouble(OrderItem::quantity)))
+                .entrySet().stream()
+                .sorted(Comparator.<Map.Entry<Product, Double>>comparingDouble(Map.Entry::getValue).reversed())
+                .limit(n).map(Map.Entry::getKey).toList();
     }
     
     /**
