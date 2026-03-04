@@ -2,6 +2,9 @@ package edu.touro.las.mcon364.streams.exercises;
 
 import java.util.*;
 import java.util.stream.*;
+import java.util.*;
+import java.util.stream.*;
+import java.util.stream.Collectors;
 
 /**
  * In-Class Exercise: Working with Streams
@@ -213,10 +216,18 @@ public class StreamExercise {
      * }
      */
     public Map<String, List<String>> groupByPerformance() {
-        // TODO: Implement using streams
-        // Hint: Use Collectors.groupingBy() with a classifier function
+        return gradebook.entrySet().stream()
+                .collect(Collectors.groupingBy(
 
-        return null;
+                        (Map.Entry<String, List<Integer>> entry) -> {
+                            double average = entry.getValue().stream()
+                                    .mapToInt(Integer::intValue)
+                                    .average()
+                                    .orElse(0.0);
+
+                            return getLetterGrade(average);
+                        },
+                        Collectors.mapping(Map.Entry::getKey, Collectors.toList())));
     }
 
     /**
@@ -227,7 +238,16 @@ public class StreamExercise {
     public Map<String, Double> getStudentAverages() {
         // TODO: Implement using streams
         // Hint: Use Collectors.toMap() with a value mapper that calculates average
-        return null;
+
+        return gradebook.entrySet()
+                .stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, entry-> entry
+                        .getValue()
+                        .stream()
+                        .mapToInt(Integer::intValue)
+                        .average()
+                        .orElse(0.0)));
+
     }
 
     /**
@@ -238,7 +258,16 @@ public class StreamExercise {
     public String findTopPerformer() {
         // TODO: Implement using streams
         // Hint: Use max() with a comparator based on average
-        return null;
+        return gradebook.entrySet()
+                .stream()
+                .max(Comparator.comparingDouble(entry->entry
+                   .getValue()
+                        .stream()
+                        .mapToInt(Integer::intValue)
+                        .average()
+                        .orElse(0.0)))
+                .map(Map.Entry::getKey)
+                .orElse("No students found");
     }
 
     // =========================================================================
