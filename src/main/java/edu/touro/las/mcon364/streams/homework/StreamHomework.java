@@ -232,7 +232,8 @@ public class StreamHomework {
     public Map<String, Double> getRevenueByCustomer() {
         // TODO: Implement using streams
         // Hint: Filter delivered, group by customerId, sum totals
-        return null;
+        return customerOrders.stream().filter(customerOrder -> customerOrder.status()==OrderStatus.DELIVERED).collect(Collectors.groupingBy(CustomerOrder::customerId,Collectors.summingDouble(CustomerOrder::getTotal)));
+
     }
     
     /**
@@ -245,7 +246,8 @@ public class StreamHomework {
     public List<String> getTopCustomers(int n) {
         // TODO: Implement using streams
         // Hint: Use getRevenueByCustomer(), sort by value descending, limit
-        return null;
+        return getRevenueByCustomer().entrySet().stream().sorted(Comparator.comparingDouble(Map.Entry::getValue)).limit(n).map(Map.Entry::getKey).toList();
+
     }
     
     /**
@@ -256,9 +258,9 @@ public class StreamHomework {
     public Map<String, Long> getCustomerOrderCounts() {
         // TODO: Implement using streams
         // Hint: Group by customerId, count
-        return null;
+        return customerOrders.stream().collect(Collectors.groupingBy(CustomerOrder::customerId,Collectors.counting()));
     }
-    
+                                                                                                           // .collect(Collectors.groupingBy(CustomerOrder::customerId,Collectors.summingDouble(CustomerOrder::getTotal)));
     /**
      * Task 2.4: Get customers who have placed more than one order.
      * 
@@ -267,7 +269,8 @@ public class StreamHomework {
     public List<String> getCustomersWithMultipleOrders() {
         // TODO: Implement using streams
         // Hint: Use getCustomerOrderCounts(), filter count > 1
-        return null;
+
+    return getCustomerOrderCounts().entrySet().stream().filter(stringLongEntry -> stringLongEntry.getValue()>1).map(Map.Entry::getKey).toList();
     }
     
     // =========================================================================
