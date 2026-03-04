@@ -320,7 +320,9 @@ public class StreamHomework {
     public Map<String, Integer> getProductQuantitySold() {
         // TODO: Implement using streams
         // Hint: flatMap, group by product id, sum quantity
-        return null;
+        return customerOrders.stream()
+                .flatMap(order->order.items().stream())
+                .collect(Collectors.groupingBy(item->item.product().id(), Collectors.summingInt(OrderItem::quantity)));
     }
     
     /**
@@ -332,7 +334,9 @@ public class StreamHomework {
         // TODO: Implement using streams
         // Hint: This is more complex - consider using Collectors.teeing() 
         // or computing in multiple steps
-        return null;
+        return customerOrders.stream().filter(customerOrder -> customerOrder.status==OrderStatus.DELIVERED)
+                .flatMap(customerOrder -> customerOrder.items.stream()).collect(Collectors.groupingBy(item->item.product().category(),Collectors.teeing(
+                        Collectors.summingDouble(OrderItem::getLineTotal), Collectors.summingInt(OrderItem::quantity), CategorySummary::new)));
     }
     
     // =========================================================================
