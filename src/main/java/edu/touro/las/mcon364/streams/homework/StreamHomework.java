@@ -2,6 +2,9 @@ package edu.touro.las.mcon364.streams.homework;
 
 import java.time.*;
 import java.util.*;
+import java.util.stream.Collectors;
+
+import static java.util.Comparator.comparingDouble;
 
 /**
  * Homework: E-Commerce Order Analytics
@@ -170,20 +173,21 @@ public class StreamHomework {
     // =========================================================================
     // PART 1: Basic Analytics
     // =========================================================================
-    
+
     /**
      * Task 1.1: Calculate total revenue from all DELIVERED orders.
-     * 
+     *
      * Revenue = sum of (quantity × price) for all items in delivered orders.
-     * 
+     *
      * Expected: ~5765.87
      */
     public double getTotalRevenue() {
         // TODO: Implement using streams
         // Hint: Filter by DELIVERED status, then sum order totals
-        return 0.0;
+
+        return customerOrders.stream().filter(customerOrder -> customerOrder.status()==OrderStatus.DELIVERED).mapToDouble(CustomerOrder::getTotal).sum();
     }
-    
+
     /**
      * Task 1.2: Count orders by status.
      * 
@@ -191,7 +195,7 @@ public class StreamHomework {
      */
     public long getOrderCount(OrderStatus status) {
         // TODO: Implement using streams
-        return 0;
+        return customerOrders.stream().filter(customerO->customerO.status()==status).count();
     }
     
     /**
@@ -202,7 +206,7 @@ public class StreamHomework {
     public Set<Product> getUniqueProducts() {
         // TODO: Implement using streams
         // Hint: Use flatMap to get all OrderItems, then map to Product
-        return null;
+        return customerOrders.stream().flatMap(customerOrder -> customerOrder.items().stream()).map(OrderItem::product).collect(Collectors.toSet());
     }
     
     /**
@@ -213,7 +217,7 @@ public class StreamHomework {
     public double getAverageOrderValue() {
         // TODO: Implement using streams
         // Hint: Filter delivered orders, map to total, get average
-        return 0.0;
+        return customerOrders.stream().filter(customerOrder->customerOrder.status()==OrderStatus.DELIVERED).mapToDouble(CustomerOrder::getTotal).average().orElse(0.0);
     }
     
     // =========================================================================
@@ -230,7 +234,8 @@ public class StreamHomework {
     public Map<String, Double> getRevenueByCustomer() {
         // TODO: Implement using streams
         // Hint: Filter delivered, group by customerId, sum totals
-        return null;
+        return customerOrders.stream().filter(customerOrder -> customerOrder.status()==OrderStatus.DELIVERED).collect(Collectors.groupingBy(CustomerOrder::customerId,Collectors.summingDouble(CustomerOrder::getTotal)));
+
     }
     
     /**
@@ -243,7 +248,8 @@ public class StreamHomework {
     public List<String> getTopCustomers(int n) {
         // TODO: Implement using streams
         // Hint: Use getRevenueByCustomer(), sort by value descending, limit
-        return null;
+        return getRevenueByCustomer().entrySet().stream().sorted(Comparator.<Map.Entry<String, Double>>comparingDouble(Map.Entry::getValue).reversed()).limit(n).map(Map.Entry::getKey).toList();
+
     }
     
     /**
@@ -254,9 +260,9 @@ public class StreamHomework {
     public Map<String, Long> getCustomerOrderCounts() {
         // TODO: Implement using streams
         // Hint: Group by customerId, count
-        return null;
+        return customerOrders.stream().collect(Collectors.groupingBy(CustomerOrder::customerId,Collectors.counting()));
     }
-    
+                                                                                                           // .collect(Collectors.groupingBy(CustomerOrder::customerId,Collectors.summingDouble(CustomerOrder::getTotal)));
     /**
      * Task 2.4: Get customers who have placed more than one order.
      * 
@@ -265,7 +271,8 @@ public class StreamHomework {
     public List<String> getCustomersWithMultipleOrders() {
         // TODO: Implement using streams
         // Hint: Use getCustomerOrderCounts(), filter count > 1
-        return null;
+
+    return getCustomerOrderCounts().entrySet().stream().filter(stringLongEntry -> stringLongEntry.getValue()>1).map(Map.Entry::getKey).toList();
     }
     
     // =========================================================================
@@ -282,7 +289,11 @@ public class StreamHomework {
     public Map<String, Double> getRevenueByCategory() {
         // TODO: Implement using streams
         // Hint: Filter delivered, flatMap to items, group by category
-        return null;
+        return customerOrders.stream()
+                .filter(customerOrder -> customerOrder.status()==OrderStatus.DELIVERED)
+                .flatMap(order->order.items().stream())
+                .collect(Collectors.groupingBy(orderItem -> orderItem.product().category(),
+                        Collectors.summingDouble(OrderItem::getLineTotal)));
     }
     
     /**
@@ -293,7 +304,12 @@ public class StreamHomework {
     public List<Product> getTopSellingProducts(int n) {
         // TODO: Implement using streams
         // Hint: flatMap to items, group by product, sum quantities, sort
-        return null;
+        return customerOrders.stream()
+                .flatMap(order->order.items().stream())
+                .collect(Collectors.groupingBy(OrderItem::product, Collectors.summingDouble(OrderItem::quantity)))
+                .entrySet().stream()
+                .sorted(Comparator.<Map.Entry<Product, Double>>comparingDouble(Map.Entry::getValue).reversed())
+                .limit(n).map(Map.Entry::getKey).toList();
     }
     
     /**
@@ -304,7 +320,9 @@ public class StreamHomework {
     public Map<String, Integer> getProductQuantitySold() {
         // TODO: Implement using streams
         // Hint: flatMap, group by product id, sum quantity
-        return null;
+        return customerOrders.stream()
+                .flatMap(order->order.items().stream())
+                .collect(Collectors.groupingBy(item->item.product().id(), Collectors.summingInt(OrderItem::quantity)));
     }
     
     /**
@@ -316,7 +334,9 @@ public class StreamHomework {
         // TODO: Implement using streams
         // Hint: This is more complex - consider using Collectors.teeing() 
         // or computing in multiple steps
-        return null;
+        return customerOrders.stream().filter(customerOrder -> customerOrder.status==OrderStatus.DELIVERED)
+                .flatMap(customerOrder -> customerOrder.items.stream()).collect(Collectors.groupingBy(item->item.product().category(),Collectors.teeing(
+                        Collectors.summingDouble(OrderItem::getLineTotal), Collectors.summingInt(OrderItem::quantity), CategorySummary::new)));
     }
     
     // =========================================================================
@@ -331,7 +351,7 @@ public class StreamHomework {
     public Map<YearMonth, List<CustomerOrder>> getOrdersByMonth() {
         // TODO: Implement using streams
         // Hint: Use YearMonth.from(order.orderDate()) as classifier
-        return null;
+        return customerOrders.stream().collect(Collectors.groupingBy(order->YearMonth.from(order.orderDate())));
     }
     
     /**
@@ -342,7 +362,9 @@ public class StreamHomework {
     public Map<YearMonth, Double> getMonthlyRevenue() {
         // TODO: Implement using streams
         // Hint: Filter delivered, group by month, sum totals
-        return null;
+        return customerOrders.stream()
+                .filter(order->order.status()==OrderStatus.DELIVERED)
+                .collect(Collectors.groupingBy(order-> YearMonth.from(order.orderDate()), Collectors.summingDouble(CustomerOrder::getTotal)));
     }
     
     /**
@@ -353,7 +375,9 @@ public class StreamHomework {
     public List<CustomerOrder> getOrdersInDateRange(LocalDate start, LocalDate end) {
         // TODO: Implement using streams
         // Hint: Filter using !isBefore(start) && !isAfter(end)
-        return null;
+        return customerOrders.stream().filter(order-> {LocalDate date=order.orderDate();
+        return !date.isBefore(start) && !date.isAfter(end);
+        }).toList();
     }
     
     /**
@@ -364,7 +388,7 @@ public class StreamHomework {
     public Map<LocalDate, Long> getDailyOrderCounts() {
         // TODO: Implement using streams
         // Hint: Group by orderDate, count
-        return null;
+        return customerOrders.stream().collect(Collectors.groupingBy(CustomerOrder::orderDate,Collectors.counting()));
     }
     
     // =========================================================================
