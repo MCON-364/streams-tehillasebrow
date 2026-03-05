@@ -351,7 +351,7 @@ public class StreamHomework {
     public Map<YearMonth, List<CustomerOrder>> getOrdersByMonth() {
         // TODO: Implement using streams
         // Hint: Use YearMonth.from(order.orderDate()) as classifier
-        return null;
+        return customerOrders.stream().collect(Collectors.groupingBy(order->YearMonth.from(order.orderDate())));
     }
     
     /**
@@ -362,7 +362,9 @@ public class StreamHomework {
     public Map<YearMonth, Double> getMonthlyRevenue() {
         // TODO: Implement using streams
         // Hint: Filter delivered, group by month, sum totals
-        return null;
+        return customerOrders.stream()
+                .filter(order->order.status()==OrderStatus.DELIVERED)
+                .collect(Collectors.groupingBy(order-> YearMonth.from(order.orderDate()), Collectors.summingDouble(CustomerOrder::getTotal)));
     }
     
     /**
@@ -373,7 +375,9 @@ public class StreamHomework {
     public List<CustomerOrder> getOrdersInDateRange(LocalDate start, LocalDate end) {
         // TODO: Implement using streams
         // Hint: Filter using !isBefore(start) && !isAfter(end)
-        return null;
+        return customerOrders.stream().filter(order-> {LocalDate date=order.orderDate();
+        return !date.isBefore(start) && !date.isAfter(end);
+        }).toList();
     }
     
     /**
@@ -384,7 +388,7 @@ public class StreamHomework {
     public Map<LocalDate, Long> getDailyOrderCounts() {
         // TODO: Implement using streams
         // Hint: Group by orderDate, count
-        return null;
+        return customerOrders.stream().collect(Collectors.groupingBy(CustomerOrder::orderDate,Collectors.counting()));
     }
     
     // =========================================================================
